@@ -13,29 +13,28 @@
 
         let bulkBody = [];
 
-        for (let item of Object.entries(data)) {
-        console.log(data); return false;
-        bulkBody.push({
-                index: {
-                    _index: index,
-                    _type: type,
-                    _id: item.id
-                }
-            });
-            bulkBody.push({item});
-        }
+        data.forEach(item => {
+			bulkBody.push({
+				index: {
+					_index: index,
+					_type: type,
+					_id: item.artistID
+				}
+			})
+			bulkBody.push(item)
+        })
 
-        // esClient.bulk({ body: bulkBody })
-        //     .then(response => {
-        //         let errorCount = 0;
-        //         response.items.forEach(item => {
-        //             if (item.index && item.index.error) {
-        //                 console.log(++errorCount, item.index.error);
-        //             }
-        //         });
-        //         console.log(`Successfully indexed ${data.length - errorCount} out of ${data.length} items`);
-        //     })
-        //     .catch(console.err);
+        esClient.bulk({ body: bulkBody })
+            .then(response => {
+                let errorCount = 0;
+                response.items.forEach(item => {
+                    if (item.index && item.index.error) {
+                        console.log(++errorCount, item.index.error);
+                    }
+                });
+                console.log(`Successfully indexed ${data.length - errorCount} out of ${data.length} items`);
+            })
+            .catch(console.err);
     };
  
     // only for testing purposes
@@ -59,8 +58,18 @@
             .then(response => {
                 if (response.data) {
                     const data = response.data
-
-                    bulkIndex('artists', 'artist', data)
+                    if (response) {
+                        const data = response.data
+                        //get type of data
+                        for (let x in data) {
+                            let y = typeof data[x]
+                            //get the JSON object data to bulk index in Elasticsearch
+                            if (y == 'object') {
+                                const xx = data[x]
+                                bulkIndex('artists', 'artist', xx)
+                            }
+                        }
+                    }
                 }
             })
             .catch(error => {
